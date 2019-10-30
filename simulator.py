@@ -27,7 +27,48 @@ class State():
     def incrementPC(self):
         self.PC = self.PC + 4
 
-    #def printState(self):
+    def printState(self):
+        outputFileName = SetUp.get_output_filename()
+
+        with open(outputFileName + "_sim.txt", 'a') as outFile:
+
+            i = int(self.getIndexOfMemAddress(self.PC))
+            outFile.write("====================\n")
+            outFile.write("cycle:" + str(self.cycle) + "\t" + str(self.PC) + "\t" + self.opcodeStr[i] + self.arg1Str[i]
+                          + self.arg2Str[i] + self.arg3Str[i] + "\n")
+            outFile.write("\n")
+            outFile.write("registers:\n")
+            outStr = "r00:"
+            for i in range(0, 8):
+                outStr = outStr + "\t" + str(self.R[i])
+            outFile.write(outStr + "\n")
+            outStr = "r08:"
+            for i in range(8, 16):
+                outStr = outStr + "\t" + str(self.R[i])
+            outFile.write(outStr + "\n")
+            outStr = "r16:"
+            for i in range(16, 24):
+                outStr = outStr + "\t" + str(self.R[i])
+            outFile.write(outStr + "\n")
+            outStr = "r24:"
+            for i in range(24, 32):
+                outStr = outStr + "\t" + str(self.R[i])
+            outFile.write(outStr + "\n")
+            outFile.write("\ndata:\n")
+            outStr = "\n"
+            for i in range(len(self.dataval)):
+
+                if i % 8 == 0 and i != 0 or i == len(self.dataval):
+                    outFile.write(outStr + "\n")
+
+                if i % 8 == 0:
+                    outStr = str(self.address[i + self.numInstructions]) + ":" + str(self.dataval[i])
+
+                if (i % 8 != 0):
+                    outStr = outStr + "\t" + str(self.dataval[i])
+
+            outFile.write(outStr + "\n")
+            outFile.close()
 
 
 class Simulator():
@@ -57,7 +98,7 @@ class Simulator():
             i = int(armState.getIndexOfMemAddress(armState.PC))
 
             if(self.opcode[i] == 0):
-                #armState.printState()
+                armState.printState()
                 armState.incrementPC()
                 armState.cycle += 1
                 continue
@@ -87,18 +128,66 @@ class Simulator():
             elif (self.opcode[i] >= 1940 and self.opcode[i] <= 1943): #MOVK
                 armState.R[self.arg2[i]] = armState.R[self.arg2[i]] + (armState.R[self.arg3[i]] * self.arg1[i])
             elif self.opcode[i] == 1690: #LSL
-                armState.R[self.arg1[i]] = armState.R[self.arg3[i]] / (2**self.arg2[i])
-            elif self.opcode[i] == 1691: #LSR
                 armState.R[self.arg1[i]] = armState.R[self.arg3[i]] * (2**self.arg2[i])
+            elif self.opcode[i] == 1691: #LSR
+                armState.R[self.arg1[i]] = int(armState.R[self.arg3[i]] / (2**self.arg2[i]))
             elif self.opcode[i] == 1872: #EOR
                 armState.R[self.arg3[i]] = armState.R[self.arg1[i]] ^ armState.R[self.arg2[i]]
+            elif self.opcode[i] == 1986: #LDUR
+                addrOffest = armState.R[self.arg2[i]] + (self.arg1[i] * 4)
+                found = False
+                if addrOffest <= armState.address[len(armState.address) - 1]:
+                    found = True
+                if not found:
+                    lastAddr = armState.address[len(armState.address) - 1] + 4
+                    while lastAddr != addrOffest + 4:
+                        armState.address.append(lastAddr)
+                        lastAddr += 4
+                    while len(armState.address) - armState.numInstructions > len(armState.dataval):
+                        armState.dataval.append(0)
+                    armState.R[self.arg3[i]] = 0
+                if found:
+                    for j in range(len(armState.address)):
+                        if armState.address[j] == addrOffest:
+                            addrIn = j
+
+                    dataIn = addrIn - armState.numInstructions
+
+                    if dataIn < 0:
+                        armState.R[self.arg3[i]] = armState.R[self.arg3[addrIn]]
+                    else:
+                        armState.R[self.arg3[i]] = armState.dataval[dataIn]
+            elif self.opcode[i] == 1984: #STUR
+                addrOffest = armState.R[self.arg2[i]] + (self.arg1[i] * 4)
+                found = False
+                if addrOffest <= armState.address[len(armState.address) - 1]:
+                    found = True
+                if not found:
+                    lastAddr = armState.address[len(armState.address) - 1] + 4
+                    while lastAddr != addrOffest + 4:
+                        armState.address.append(lastAddr)
+                        lastAddr += 4
+                    while len(armState.address) - armState.numInstructions - 1 > len(armState.dataval):
+                        armState.dataval.append(0)
+                    armState.dataval.append(armState.R[self.arg3[i]])
+                if found:
+                    for j in range(len(armState.address)):
+                        if armState.address[j] == addrOffest:
+                            addrIn = j
+
+                    dataIn = addrIn - armState.numInstructions
+
+                    if dataIn < 0:
+                        armState.R[self.arg3[addrIn]] = armState.R[self.arg3[i]]
+                    else:
+                        armState.dataval[dataIn] = armState.R[self.arg3[i]]
             elif self.opcode[i] == 2038: #BREAK
                 foundBreak = True
 
             else: #ERROR
                 print("IN SIM -- UNKNOWN INSTRUCTION ------------------ !!!!")
 
-            #armState.printState()
+            armState.printState()
             armState.PC = jumpAddr
             armState.incrementPC()
             armState.cycle += 1
