@@ -183,6 +183,15 @@ class dissasembler:
                 self.arg1Str.append("\tR" + str(self.arg3[i]))
                 self.arg2Str.append(", R" + str(self.arg1[i]))
                 self.arg3Str.append(", #" + str(self.arg2[i]))
+            elif opcode[i] == 1692:
+                self.instrSpaced.append(SetUp.bin2StringSpacedR(instructions[i]))
+                self.opcodeStr.append("ASR")
+                self.arg1.append((int(instructions[i], base=2) & MASKs.rnMask) >> 5)
+                self.arg2.append((int(instructions[i], base=2) & MASKs.shmtMask) >> 10)
+                self.arg3.append((int(instructions[i], base=2) & MASKs.rdMask) >> 0)
+                self.arg1Str.append("\tR" + str(self.arg3[i]))
+                self.arg2Str.append(", R" + str(self.arg1[i]))
+                self.arg3Str.append(", #" + str(self.arg2[i]))
             elif opcode[i] == 1872:
                 self.instrSpaced.append(SetUp.bin2StringSpacedR(instructions[i]))
                 self.opcodeStr.append("EOR")
