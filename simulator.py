@@ -146,7 +146,9 @@ class Simulator():
                     while len(armState.address) - armState.numInstructions > len(armState.dataval):
                         armState.dataval.append(0)
                     armState.R[self.arg3[i]] = 0
+
                 if found:
+                    addrIn = 0
                     for j in range(len(armState.address)):
                         if armState.address[j] == addrOffest:
                             addrIn = j
@@ -171,8 +173,9 @@ class Simulator():
                         armState.dataval.append(0)
                     armState.dataval.append(armState.R[self.arg3[i]])
                 if found:
+                    addrIn = 0
                     for j in range(len(armState.address)):
-                        if armState.address[j] == addrOffest:
+                        if armState.address[j] == addrOffest + 96:
                             addrIn = j
 
                     dataIn = addrIn - armState.numInstructions
