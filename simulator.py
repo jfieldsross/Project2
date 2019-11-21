@@ -107,7 +107,7 @@ class Simulator():
             elif self.opcode[i] == 1112: #ADD
                 armState.R[self.arg3[i]] = armState.R[self.arg2[i]] + armState.R[self.arg1[i]]
             elif self.opcode[i] == 1624: #SUB
-                armState.R[self.arg3[i]] = armState.R[self.arg2[i]] - armState.R[self.arg1[i]]
+                armState.R[self.arg3[i]] = armState.R[self.arg1[i]] - armState.R[self.arg2[i]]
             elif self.opcode[i] == 1104: #AND
                 armState.R[self.arg3[i]] = armState.R[self.arg2[i]] & armState.R[self.arg1[i]]
             elif self.opcode[i] == 1360: #ORR
@@ -123,24 +123,24 @@ class Simulator():
                 if armState.R[self.arg2[i]] != 0:
                     jumpAddr = jumpAddr + ((self.arg1[i] * 4) - 4)
             elif (self.opcode[i] >= 1684 and self.opcode[i] <= 1687): #MOVZ
-                armState.R[self.arg2[i]] = 0
-                armState.R[self.arg2[i]] = armState.R[self.arg3[i]] * self.arg1[i]
+                armState.R[self.arg3[i]] = 0
+                armState.R[self.arg3[i]] = self.arg2[i] * self.arg1[i]
             elif (self.opcode[i] >= 1940 and self.opcode[i] <= 1943): #MOVK
                 if self.arg1[i] == 0:
-                    armState.R[self.arg2[i]] = armState.R[self.arg2[i]] & 0xFFFFFFFFFFFF0000
+                    armState.R[self.arg3[i]] = armState.R[self.arg3[i]] & 0xFFFFFFFFFFFF0000
                 elif self.arg1[i] == 16:
-                    armState.R[self.arg2[i]] = armState.R[self.arg2[i]] & 0xFFFFFFFF0000FFFF
+                    armState.R[self.arg3[i]] = armState.R[self.arg3[i]] & 0xFFFFFFFF0000FFFF
                 elif self.arg1[i] == 32:
-                    armState.R[self.arg2[i]] = armState.R[self.arg2[i]] & 0xFFFF0000FFFFFFFF
+                    armState.R[self.arg3[i]] = armState.R[self.arg3[i]] & 0xFFFF0000FFFFFFFF
                 else:
-                    armState.R[self.arg2[i]] = armState.R[self.arg2[i]] & 0x0000FFFFFFFFFFFF
-                armState.R[self.arg2[i]] = armState.R[self.arg2[i]] + (armState.R[self.arg3[i]] * self.arg1[i])
+                    armState.R[self.arg3[i]] = armState.R[self.arg3[i]] & 0x0000FFFFFFFFFFFF
+                armState.R[self.arg3[i]] = self.arg2[i] + (armState.R[self.arg3[i]] * self.arg1[i])
             elif self.opcode[i] == 1692: #ASR
-                armState.R[self.arg1[i]] = armState.R[self.arg3[i]] >> self.arg2[i]
+                armState.R[self.arg3[i]] = armState.R[self.arg1[i]] >> self.arg2[i]
             elif self.opcode[i] == 1691: #LSL
-                armState.R[self.arg1[i]] = (armState.R[self.arg3[i]] % (1 << 64)) << (self.arg2[i])
+                armState.R[self.arg3[i]] = (armState.R[self.arg1[i]] % (1 << 32)) << (self.arg2[i])
             elif self.opcode[i] == 1690: #LSR
-                armState.R[self.arg1[i]] = (armState.R[self.arg3[i]] % (1 << 64)) >> (self.arg2[i])
+                armState.R[self.arg3[i]] = (armState.R[self.arg1[i]] % (1 << 32)) >> (self.arg2[i])
             elif self.opcode[i] == 1872: #EOR
                 armState.R[self.arg3[i]] = armState.R[self.arg1[i]] ^ armState.R[self.arg2[i]]
             elif self.opcode[i] == 1986: #LDUR
@@ -185,7 +185,7 @@ class Simulator():
                 if found:
                     addrIn = 0
                     for j in range(len(armState.address)):
-                        if armState.address[j] == addrOffest + 96:
+                        if armState.address[j] == addrOffest:
                             addrIn = j
 
                     dataIn = addrIn - armState.numInstructions
